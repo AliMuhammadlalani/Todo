@@ -2,47 +2,52 @@ import { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
-  const [list, setlist] = useState([]);
-  const [todotext, settodotext] = useState("");
+  const [list, setList] = useState([]);
+  const [todotext, setTodotext] = useState("");
 
   useEffect(() => {
-    const list = JSON.parse(localStorage.getItem('list'));
-    if (list) {
-      setlist(list);
+    const storedList = localStorage.getItem("list");
+    if (storedList) {
+      console.log("Loading from localStorage:", storedList);
+      setList(JSON.parse(storedList));
     }
   }, []);
 
-const LS=()=>{
-  localStorage.setItem('list',JSON.stringify(list));
-}
- 
-
-  const HandleOnChange = (e) => {
-    settodotext(e.target.value);
+  const saveToLocalStorage = (todos) => {
+    console.log("Saving to localStorage:", todos);
+    localStorage.setItem("list", JSON.stringify(todos));
   };
 
-  const HandleOnClick = () => {
+  const handleOnChange = (e) => {
+    setTodotext(e.target.value);
+  };
+
+  const handleOnClick = () => {
     if (todotext === "") {
       alert("Enter your todo");
       return;
     }
-    setlist([...list, {todotext}]);
-    settodotext("");
-    LS();
+    const newList = [...list, { id: Date.now(), todotext }];
+    console.log(typeof(newList));
+    setList(newList);
+    setTodotext("");
+    saveToLocalStorage(newList);
   };
 
-  const DeleteTodo = (elem) => {
+  const deleteTodo = (id) => {
     if (confirm("Are you sure?")) {
-      let updatedList = list.filter((element) => element.todotext !== elem);
-      setlist(updatedList);
-      LS();
-  }};
+      const updatedList = list.filter((element) => element.id !== id);
+      setList(updatedList);
+      saveToLocalStorage(updatedList);
+    }
+  };
 
-  const EditTodo = (e) => {
-    settodotext(e);
-    let updatedList = list.filter((element) => element.todotext !== e);
-      setlist(updatedList); 
-      LS();  
+  const editTodo = (id) => {
+    const todoToEdit = list.find((element) => element.id === id);
+    setTodotext(todoToEdit.todotext);
+    const updatedList = list.filter((element) => element.id !== id);
+    setList(updatedList);
+    saveToLocalStorage(updatedList);
   };
 
   return (
@@ -53,10 +58,10 @@ const LS=()=>{
           <input
             type="text"
             value={todotext}
-            onChange={HandleOnChange}
+            onChange={handleOnChange}
             name="Todo"
           />
-          <button onClick={HandleOnClick}>Add Todo</button>
+          <button onClick={handleOnClick}>Add Todo</button>
         </div>
         {list.length === 0 && (
           <div style={{ marginTop: "12px" }} className="">
@@ -64,19 +69,19 @@ const LS=()=>{
           </div>
         )}
         {list &&
-          list.map((item) => {
+          list.map((element) => {
             return (
-              <div key={item.todotext} className="showtodo">
-                <p>{item.todotext}</p>
+              <div key={element.id} className="showtodo">
+                <p>{element.todotext}</p>
                 <button
                   className="deletebtn"
-                  onClick={() => DeleteTodo(item.todotext)}
+                  onClick={() => deleteTodo(element.id)}
                 >
                   Delete Todo
                 </button>
                 <button
                   className="editbtn"
-                  onClick={() => EditTodo(item.todotext)}
+                  onClick={() => editTodo(element.id)}
                 >
                   Edit Todo
                 </button>
